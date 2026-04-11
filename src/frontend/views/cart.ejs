@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart - RetroGame Shop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; }
+        header { background: #16213e; padding: 20px; text-align: center; }
+        header h1 { color: #e94560; font-size: 2.5rem; }
+        nav a { color: #e94560; text-decoration: none; margin: 0 10px; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .cart-item { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 15px; border: 1px solid #0f3460; display: flex; justify-content: space-between; align-items: center; }
+        .cart-item h3 { color: #e94560; }
+        .price { color: #4ecca3; font-size: 1.3rem; font-weight: bold; }
+        .total { background: #16213e; border-radius: 10px; padding: 20px; text-align: right; border: 1px solid #e94560; }
+        .total h2 { color: #4ecca3; }
+        .btn { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .empty { text-align: center; padding: 50px; color: #a8a8b3; }
+        .back-btn { color: #e94560; text-decoration: none; display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🕹️ RetroGame Shop</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/cart/user1">🛒 Cart</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <a href="/" class="back-btn">Back to Shop</a>
+        <h2 style="margin-bottom: 20px;">Your Cart</h2>
+
+        <% if (cart.items.length === 0) { %>
+            <div class="empty">
+                <h3>Your cart is empty</h3>
+            </div>
+        <% } else { %>
+            <% var total = 0; %>
+            <% for(var i = 0; i < cart.items.length; i++) { %>
+                <% var item = cart.items[i]; %>
+                <% total += parseFloat(item.price); %>
+                <div class="cart-item">
+                    <h3><%= item.name %></h3>
+                    <div class="price">$<%= item.price %></div>
+                </div>
+            <% } %>
+            <div class="total">
+                <h2>Total: $<%= parseFloat(total).toFixed(2) %></h2>
+                <button class="btn">Checkout 🎮</button>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroGame Shop 🎮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; }
+        header { background: #16213e; padding: 20px; text-align: center; }
+        header h1 { color: #e94560; font-size: 2.5rem; }
+        header p { color: #0f3460; color: #a8a8b3; }
+        nav a { color: #e94560; text-decoration: none; margin: 0 10px; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .product-card { background: #16213e; border-radius: 10px; padding: 20px; border: 1px solid #0f3460; transition: transform 0.3s; }
+        .product-card:hover { transform: translateY(-5px); border-color: #e94560; }
+        .product-card h3 { color: #e94560; margin-bottom: 10px; }
+        .product-card .category { background: #0f3460; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-bottom: 10px; }
+        .product-card .price { font-size: 1.5rem; color: #4ecca3; font-weight: bold; margin: 10px 0; }
+        .product-card .stock { color: #a8a8b3; font-size: 0.9rem; margin-bottom: 15px; }
+        .btn { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1rem; }
+        .btn:hover { background: #c73652; }
+        .filter-bar { margin-bottom: 30px; display: flex; gap: 10px; }
+        .filter-btn { background: #0f3460; color: #eee; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
+        .filter-btn:hover { background: #e94560; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🕹️ RetroGame Shop</h1>
+        <p>Your one-stop shop for retro gaming nostalgia</p>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/cart/user1">🛒 Cart</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="filter-bar">
+            <button class="filter-btn" onclick="filterProducts('all')">All</button>
+            <button class="filter-btn" onclick="filterProducts('Console')">Consoles</button>
+            <button class="filter-btn" onclick="filterProducts('Game')">Games</button>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            <% products.forEach(product => { %>
+            <div class="product-card" data-category="<%= product.category %>">
+                <div class="category"><%= product.category %></div>
+                <h3><%= product.name %></h3>
+                <div class="price">$<%= product.price %></div>
+                <div class="stock">In Stock: <%= product.stock %></div>
+                <form action="/cart/user1/add" method="POST">
+                    <input type="hidden" name="id" value="<%= product.id %>">
+                    <input type="hidden" name="name" value="<%= product.name %>">
+                    <input type="hidden" name="price" value="<%= product.price %>">
+                    <button type="submit" class="btn">Add to Cart 🛒</button>
+                </form>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <script>
+        function filterProducts(category) {
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
