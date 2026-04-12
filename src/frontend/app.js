@@ -9,9 +9,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-const PRODUCT_SERVICE = 'http://localhost:8080';
-const CART_SERVICE = 'http://localhost:8081';
-const ORDER_SERVICE = 'http://localhost:8080';
+const PRODUCT_SERVICE = 'http://product-service:8080';
+const CART_SERVICE = 'http://cart-service:8081';
+const ORDER_SERVICE = 'http://order-service:8082';
 
 // Home page - show all products
 app.get('/', async (req, res) => {

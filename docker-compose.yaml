@@ -1,0 +1,52 @@
+services:
+  frontend:
+    build: ./src/frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - product-service
+      - cart-service
+      - order-service
+      - payment-service
+      - notification-service
+    networks:
+      - retro-network
+
+  product-service:
+    build: ./src/product-service
+    ports:
+      - "8080:8080"
+    networks:
+      - retro-network
+
+  cart-service:
+    build: ./src/cart-service
+    ports:
+      - "8081:8081"
+    networks:
+      - retro-network
+
+  order-service:
+    build: ./src/order-service
+    ports:
+      - "8082:8082"
+    networks:
+      - retro-network
+
+  payment-service:
+    build: ./src/payment-service
+    ports:
+      - "8083:8083"
+    networks:
+      - retro-network
+
+  notification-service:
+    build: ./src/notification-service
+    ports:
+      - "8084:8084"
+    networks:
+      - retro-network
+
+networks:
+  retro-network:
+    driver: bridge
