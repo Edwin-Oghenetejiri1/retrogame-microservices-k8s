@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8083
+EXPOSE 8084
 
 CMD ["python3", "main.py"]

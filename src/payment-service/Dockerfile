@@ -18,6 +18,6 @@ WORKDIR /app
 
 COPY --from=BUILD /app/publish .
 
-EXPOSE 8082
+EXPOSE 8083
 
 CMD ["dotnet", "payment-service.dll"]
