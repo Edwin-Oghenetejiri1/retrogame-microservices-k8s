@@ -43,6 +43,28 @@ app.post('/cart/:userId/add', async (req, res) => {
     }
 });
 
+// Delete product
+app.post('/product/delete', async (req, res) => {
+    try {
+        await axios.delete(`${PRODUCT_SERVICE}/product/delete?id=${req.body.id}`);
+        res.redirect('/');
+    } catch (error) {
+        res.redirect('/');
+    }
+});
+
+// Remove from cart
+app.post('/cart/:userId/remove', async (req, res) => {
+    try {
+        await axios.delete(`${CART_SERVICE}/cart/${req.params.userId}/remove`, {
+            data: { id: parseInt(req.body.id) }
+        });
+        res.redirect(`/cart/${req.params.userId}`);
+    } catch (error) {
+        res.redirect(`/cart/${req.params.userId}`);
+    }
+});
+
 app.listen(3000, () => {
     console.log('Frontend service starting on port 3000...');
 });

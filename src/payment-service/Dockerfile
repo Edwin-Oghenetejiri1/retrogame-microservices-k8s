@@ -1,5 +1,4 @@
-# Build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS BUILD
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /app
 
@@ -11,13 +10,12 @@ COPY . .
 
 RUN dotnet publish -c Release -o publish
 
-# Run stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS RELEASE
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS release
 
 WORKDIR /app
 
-COPY --from=BUILD /app/publish .
+COPY --from=build /app/publish .
 
-EXPOSE 8083
+EXPOSE 8082
 
 CMD ["dotnet", "payment-service.dll"]

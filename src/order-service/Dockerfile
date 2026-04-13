@@ -1,5 +1,4 @@
-# Build stage
-FROM maven:3.9.6-eclipse-temurin-21 AS BUILD
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
@@ -11,12 +10,11 @@ COPY src ./src
 
 RUN mvn package -DskipTests
 
-# Run stage
-FROM eclipse-temurin:21-jre-alpine AS RELEASE
+FROM eclipse-temurin:21-jre-alpine AS release
 
 WORKDIR /app
 
-COPY --from=BUILD /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8082
 

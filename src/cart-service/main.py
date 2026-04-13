@@ -26,7 +26,7 @@ def add_to_cart(user_id):
 def remove_from_cart(user_id):
     item_id = request.get_json().get('id')
     if user_id in carts:
-        carts[user_id] = [i for i in carts[user_id] if i.get('id') != item_id]
+        carts[user_id] = [i for i in carts[user_id] if str(i.get('id')) != str(item_id)]
     return jsonify({"message": "Item removed", "cart": carts.get(user_id, [])})
 
 @app.route('/cart/<user_id>/clear', methods=['DELETE'])

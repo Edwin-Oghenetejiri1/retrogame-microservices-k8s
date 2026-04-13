@@ -1,4 +1,5 @@
-FROM golang:1.26.2-alpine3.23 AS BUILD
+# Build stage
+FROM golang:1.26.2-alpine3.23 AS build
 
 WORKDIR /app
 
@@ -10,11 +11,12 @@ COPY . .
 
 RUN go build -o product-service main.go
 
-FROM alpine:latest AS RELEASE
+# Run stage
+FROM alpine:latest AS release
 
 WORKDIR /app
 
-COPY --from=BUILD /app/product-service .
+COPY --from=build /app/product-service .
 
 EXPOSE 8080
 

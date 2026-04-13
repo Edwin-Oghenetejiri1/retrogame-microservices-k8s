@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Product struct {
@@ -54,8 +55,24 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/products", getProducts)
 	http.HandleFunc("/product", getProduct)
+	http.HandleFunc("/product/delete", deleteProduct)
 	http.HandleFunc("/health", healthCheck)
 
 	log.Println("Product service starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func deleteProduct(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	idStr := r.URL.Query().Get("id")
+	id, _ := strconv.Atoi(idStr)
+	for i, p := range products {
+		if p.ID == id {
+			products = append(products[:i], products[i+1:]...)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Product deleted"})
+			return
+		}
+	}
+	http.Error(w, "Product not found", http.StatusNotFound)
 }
