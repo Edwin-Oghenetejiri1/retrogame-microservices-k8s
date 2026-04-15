@@ -1,14 +1,22 @@
 from flask import Flask, jsonify, request
-from datetime import datetime
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 
 notifications = []
 notification_id_counter = 1
 
-@app.route('/health')
+@app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"})
+
+@app.route('/notifications', methods=['GET'])
+def get_notifications():
+    return jsonify(notifications)
+
+@app.route('/notifications/<user_id>', methods=['GET'])
+def get_user_notifications(user_id):
+    return jsonify([n for n in notifications if n['userId'] == user_id])
 
 @app.route('/notifications/send', methods=['POST'])
 def send_notification():
@@ -19,18 +27,13 @@ def send_notification():
     if not data:
         return jsonify({"error": "invalid request"}), 400
 
-    user_id = data.get("userId")
-    message = data.get("message")
-
-    if not isinstance(user_id, int) or not message:
-        return jsonify({"error": "invalid input"}), 400
-
     notification = {
         "notificationId": notification_id_counter,
-        "userId": user_id,
-        "message": message,
+        "userId": data.get("userId"),
+        "message": data.get("message"),
+        "type": data.get("type", "EMAIL"),
         "status": "SENT",
-        "createdAt": datetime.utcnow().isoformat()
+        "createdAt": datetime.now(timezone.utc).isoformat()
     }
 
     notifications.append(notification)
@@ -39,5 +42,5 @@ def send_notification():
     return jsonify(notification)
 
 if __name__ == '__main__':
-    print("Notification service running...")
+    print("Notification service starting...")
     app.run(host='127.0.0.1', port=8083, debug=False)
