@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 from datetime import datetime, timezone
 
@@ -43,4 +44,8 @@ def send_notification():
 
 if __name__ == '__main__':
     print("Notification service starting...")
-    app.run(host='127.0.0.1', port=8083, debug=False)
+
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8083"))
+
+    app.run(host=host, port=port, debug=False)
