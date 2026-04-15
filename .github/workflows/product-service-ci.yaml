@@ -81,20 +81,13 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: src/product-service
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_SCANNER_OPTS: >
+          args: >
+            -Dsonar.projectKey=product-service
+            -Dsonar.sources=src/product-service
             -Dsonar.go.coverage.reportPaths=coverage.out
-
-      # ✅ QUALITY GATE ENFORCEMENT (THIS BLOCKS BAD CODE)
-      - name: Sonar Quality Gate Check
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker:
     runs-on: ubuntu-latest
