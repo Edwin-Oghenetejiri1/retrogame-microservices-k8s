@@ -31,7 +31,10 @@ var products = []Product{
 func getProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(products)
+	if err := json.NewEncoder(w).Encode(products); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func getProduct(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +43,10 @@ func getProduct(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	for _, p := range products {
 		if fmt.Sprintf("%d", p.ID) == id {
-			json.NewEncoder(w).Encode(p)
+			if err := json.NewEncoder(w).Encode(p); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 	}
@@ -49,7 +55,10 @@ func getProduct(w http.ResponseWriter, r *http.Request) {
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "healthy", "service": "product-service"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "healthy", "service": "product-service"}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func main() {
@@ -70,12 +79,17 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 	for i, p := range products {
 		if p.ID == id {
 			products = append(products[:i], products[i+1:]...)
-			json.NewEncoder(w).Encode(map[string]string{"message": "Product deleted"})
+			if err := json.NewEncoder(w).Encode(map[string]string{"message": "Product deleted"}); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 	}
 	http.Error(w, "Product not found", http.StatusNotFound)
 }
+
+
 
 
 
