@@ -12,7 +12,7 @@ COPY . .
 RUN go build -o product-service main.go
 
 # Run stage
-FROM alpine:latest AS release
+FROM alpine:3.23 AS release
 
 WORKDIR /app
 

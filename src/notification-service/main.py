@@ -1,51 +1,42 @@
 import os
 from flask import Flask, jsonify, request
-from datetime import datetime, timezone
 
 app = Flask(__name__)
 
-notifications = []
-notification_id_counter = 1
+carts = {}
 
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"})
 
-@app.route('/notifications', methods=['GET'])
-def get_notifications():
-    return jsonify(notifications)
+@app.route('/cart/<user_id>', methods=['GET'])
+def get_cart(user_id):
+    return jsonify(carts.get(user_id, []))
 
-@app.route('/notifications/<user_id>', methods=['GET'])
-def get_user_notifications(user_id):
-    return jsonify([n for n in notifications if n['userId'] == user_id])
+@app.route('/cart/<user_id>/add', methods=['POST'])
+def add_to_cart(user_id):
+    item = request.get_json()
+    if user_id not in carts:
+        carts[user_id] = []
+    carts[user_id].append(item)
+    return jsonify({"message": "Item added", "cart": carts[user_id]})
 
-@app.route('/notifications/send', methods=['POST'])
-def send_notification():
-    global notification_id_counter
+@app.route('/cart/<user_id>/remove', methods=['DELETE'])
+def remove_from_cart(user_id):
+    item_id = request.get_json().get('id')
+    if user_id in carts:
+        carts[user_id] = [i for i in carts[user_id] if str(i.get('id')) != str(item_id)]
+    return jsonify({"message": "Item removed", "cart": carts.get(user_id, [])})
 
-    data = request.get_json(silent=True)
-
-    if not data:
-        return jsonify({"error": "invalid request"}), 400
-
-    notification = {
-        "notificationId": notification_id_counter,
-        "userId": data.get("userId"),
-        "message": data.get("message"),
-        "type": data.get("type", "EMAIL"),
-        "status": "SENT",
-        "createdAt": datetime.now(timezone.utc).isoformat()
-    }
-
-    notifications.append(notification)
-    notification_id_counter += 1
-
-    return jsonify(notification)
+@app.route('/cart/<user_id>/clear', methods=['DELETE'])
+def clear_cart(user_id):
+    carts[user_id] = []
+    return jsonify({"message": "Cart cleared"})
 
 if __name__ == '__main__':
-    print("Notification service starting...")
+    print("Cart service starting on port 8081...")
 
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "8083"))
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "8081"))
 
     app.run(host=host, port=port, debug=False)
