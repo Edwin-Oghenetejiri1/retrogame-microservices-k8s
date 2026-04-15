@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -28,37 +27,75 @@ var products = []Product{
 	{ID: 8, Name: "Street Fighter II", Category: "Game", Price: 22.00, Stock: 18, Image: "sf2.jpg"},
 }
 
-func getProducts(w http.ResponseWriter, r *http.Request) {
+func setHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if err := json.NewEncoder(w).Encode(products); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+}
+
+func getProducts(w http.ResponseWriter, r *http.Request) {
+	setHeaders(w)
+	_ = json.NewEncoder(w).Encode(products)
 }
 
 func getProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	id := r.URL.Query().Get("id")
+	setHeaders(w)
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		http.Error(w, "missing id parameter", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id format", http.StatusBadRequest)
+		return
+	}
+
 	for _, p := range products {
-		if fmt.Sprintf("%d", p.ID) == id {
-			if err := json.NewEncoder(w).Encode(p); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		if p.ID == id {
+			_ = json.NewEncoder(w).Encode(p)
 			return
 		}
 	}
-	http.Error(w, "Product not found", http.StatusNotFound)
+
+	http.Error(w, "product not found", http.StatusNotFound)
+}
+
+func deleteProduct(w http.ResponseWriter, r *http.Request) {
+	setHeaders(w)
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		http.Error(w, "missing id parameter", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id format", http.StatusBadRequest)
+		return
+	}
+
+	for i, p := range products {
+		if p.ID == id {
+			products = append(products[:i], products[i+1:]...)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"message": "product deleted",
+			})
+			return
+		}
+	}
+
+	http.Error(w, "product not found", http.StatusNotFound)
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]string{"status": "healthy", "service": "product-service"}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	setHeaders(w)
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"status":  "healthy",
+		"service": "product-service",
+	})
 }
 
 func main() {
@@ -70,25 +107,6 @@ func main() {
 	log.Println("Product service starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
-
-func deleteProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	idStr := r.URL.Query().Get("id")
-	id, _ := strconv.Atoi(idStr)
-	for i, p := range products {
-		if p.ID == id {
-			products = append(products[:i], products[i+1:]...)
-			if err := json.NewEncoder(w).Encode(map[string]string{"message": "Product deleted"}); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			return
-		}
-	}
-	http.Error(w, "Product not found", http.StatusNotFound)
-}
-
 
 
 
