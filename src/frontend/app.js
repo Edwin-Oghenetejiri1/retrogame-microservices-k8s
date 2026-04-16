@@ -42,6 +42,42 @@ app.get('/cart/:userId', async (req, res) => {
     }
 });
 
+// Add to cart
+app.post('/cart/:userId/add', async (req, res) => {
+    try {
+        const userId = Number.parseInt(req.params.userId, 10);
+
+        if (Number.isNaN(userId)) {
+            return res.status(400).send("Invalid user ID");
+        }
+
+        await axios.post(`${CART_SERVICE}/cart/${userId}/add`, req.body);
+        return res.redirect(`/cart/${userId}`);
+
+    } catch (error) {
+        console.error("Add to cart error:", error.message);
+        return res.status(500).send("Internal server error");
+    }
+});
+
+// Remove from cart
+app.post('/cart/:userId/remove', async (req, res) => {
+    try {
+        const userId = Number.parseInt(req.params.userId, 10);
+
+        if (Number.isNaN(userId)) {
+            return res.status(400).send("Invalid user ID");
+        }
+
+        await axios.post(`${CART_SERVICE}/cart/${userId}/remove`, req.body);
+        return res.redirect(`/cart/${userId}`);
+
+    } catch (error) {
+        console.error("Remove from cart error:", error.message);
+        return res.status(500).send("Internal server error");
+    }
+});
+
 // Delete product
 app.post('/product/delete', async (req, res) => {
     try {

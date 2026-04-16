@@ -5,9 +5,39 @@ app = Flask(__name__)
 
 carts = {}
 
-@app.route('/cart/<user_id>/remove', methods=['DELETE'])
+@app.route('/cart/<user_id>', methods=['GET'])
+def get_cart(user_id):
+    items = carts.get(user_id, [])
+    return jsonify({"items": items})
+
+
+@app.route('/cart/<user_id>/add', methods=['POST'])
+def add_to_cart(user_id):
+    data = request.get_json(silent=True) or request.form.to_dict()
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    item = {
+        "id": data.get("id"),
+        "name": data.get("name"),
+        "price": data.get("price")
+    }
+
+    if not all([item["id"], item["name"], item["price"]]):
+        return jsonify({"error": "Missing item fields"}), 400
+
+    if user_id not in carts:
+        carts[user_id] = []
+
+    carts[user_id].append(item)
+
+    return jsonify({"message": "Item added", "cart": carts[user_id]}), 201
+
+
+@app.route('/cart/<user_id>/remove', methods=['POST'])
 def remove_from_cart(user_id):
-    data = request.get_json(silent=True)
+    data = request.get_json(silent=True) or request.form.to_dict()
 
     if data:
         item_id = data.get('id')

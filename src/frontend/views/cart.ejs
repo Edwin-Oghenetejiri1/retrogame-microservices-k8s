@@ -27,17 +27,18 @@
         <h1>🕹️ RetroGame Shop</h1>
         <nav>
             <a href="/">Home</a>
-            <a href="/cart/user1">🛒 Cart</a>
+            <a href="/cart/1">🛒 Cart</a>
         </nav>
     </header>
 
     <div class="container">
-        <a href="/" class="back-btn">Back to Shop</a>
+        <a href="/" class="back-btn">← Back to Shop</a>
         <h2 style="margin-bottom: 20px;">Your Cart</h2>
 
         <% if (cart.items.length === 0) { %>
             <div class="empty">
                 <h3>Your cart is empty</h3>
+                <p><a href="/" style="color:#e94560;">Go browse some games!</a></p>
             </div>
         <% } else { %>
             <% var total = 0; %>
@@ -47,12 +48,15 @@
                 <div class="cart-item">
                     <div>
                         <h3><%= item.name %></h3>
+                        <span style="color:#a8a8b3; font-size:0.85rem;">ID: <%= item.id %></span>
                     </div>
-                    <div class="price">$<%= item.price %></div>
-                    <form action="/cart/user1/remove" method="POST">
-                        <input type="hidden" name="id" value="<%= item.id %>">
-                        <button type="submit" class="btn-delete">Remove 🗑️</button>
-                    </form>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div class="price">$<%= parseFloat(item.price).toFixed(2) %></div>
+                        <form action="/cart/1/remove" method="POST">
+                            <input type="hidden" name="id" value="<%= item.id %>">
+                            <button type="submit" class="btn-delete">Remove 🗑️</button>
+                        </form>
+                    </div>
                 </div>
             <% } %>
             <div class="total">
