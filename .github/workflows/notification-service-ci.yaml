@@ -1,0 +1,192 @@
+# The name of this workflow — shows up in the GitHub Actions tab in your repo
+name: notification-service-ci
+
+# "on" defines WHEN this workflow runs
+on:
+  push:
+    branches:
+      - main                              # Run when code is pushed to the main branch
+    paths:
+      - 'src/notification-service/**'    # BUT only if files inside this folder changed
+                                          # This prevents the workflow running when you edit
+                                          # unrelated services like product-service
+  pull_request:
+    branches:
+      - main                              # Also run when someone opens a Pull Request targeting main
+    paths:
+      - 'src/notification-service/**'    # Again, only if notification-service files changed
+
+# env defines reusable variables available to every job in this file
+env:
+  APP_NAME: notification-service                    # Used in docker tags and k8s manifest update
+  DOCKERHUB_ID: ${{ secrets.DOCKER_USERNAME }}      # Pulls your DockerHub username from GitHub Secrets
+                                                     # (Settings > Secrets > Actions in your repo)
+  IMAGE_TAG: ${{ github.run_id }}                   # Each workflow run gets a unique ID — used as the image tag
+                                                     # so every build produces a uniquely tagged image
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true          # Silences deprecation warnings from GitHub Actions
+                                                     # that still use older Node.js versions internally
+
+# jobs are the actual units of work. They run in parallel by default
+# unless you use "needs:" to make one wait for another
+jobs:
+
+  # ─── JOB 1: BUILD & TEST ───────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest    # GitHub spins up a fresh Ubuntu virtual machine for this job
+
+    steps:
+      # Step 1: Download your repo's code onto the VM
+      # Without this, the VM has no idea what your code looks like
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Python on the VM
+      # "uses" means we're using a pre-built Action from the GitHub Marketplace
+      # "with" passes configuration options to it
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'          # Pin to 3.11 so builds are consistent and predictable
+
+      # Step 3: Install your Python dependencies
+      # "run" executes shell commands directly on the VM
+      # The | symbol means "multi-line command"
+      - name: Install dependencies
+        run: |
+          cd src/notification-service          # Move into your service's folder
+          python -m pip install --upgrade pip  # Upgrade pip itself first (good practice)
+          pip install -r requirements.txt      # Install everything listed in requirements.txt
+
+      # Step 4: Run your unit tests
+      # pytest is the standard Python test runner
+      # If any test fails, this step fails and the whole job stops
+      - name: Unit tests
+        run: |
+          cd src/notification-service
+          pip install pytest                   # Make sure pytest is available
+          pytest                               # Discovers and runs all test_*.py files automatically
+
+  # ─── JOB 2: CODE QUALITY ───────────────────────────────────────────────────
+  # This runs IN PARALLEL with the build job (no "needs:" means it starts immediately)
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install the linting tools
+      # flake8  — checks for syntax errors and style issues (like Go's golangci-lint)
+      # black   — checks code formatting (like gofmt for Go)
+      # isort   — checks that your imports are sorted correctly
+      - name: Install linters
+        run: |
+          pip install flake8 black isort
+
+      # Run flake8 — it will fail the job if it finds any errors
+      # --max-line-length=88 matches Black's default line length so they don't conflict
+      - name: Run flake8 (lint)
+        run: |
+          cd src/notification-service
+          flake8 . --max-line-length=88 --exclude=.git,__pycache__
+
+      # Run black in --check mode — it does NOT reformat files, it just
+      # exits with an error if any file WOULD need reformatting
+      - name: Run black (format check)
+        run: |
+          cd src/notification-service
+          black . --check
+
+      # Run isort in --check-only mode — same idea, fails if imports are out of order
+      - name: Run isort (import order check)
+        run: |
+          cd src/notification-service
+          isort . --check-only
+
+  # ─── JOB 3: BUILD & PUSH DOCKER IMAGE ─────────────────────────────────────
+  docker:
+    runs-on: ubuntu-latest
+    needs: [build, code-quality]    # This job WAITS until both jobs above pass
+                                     # If either fails, this job is skipped entirely
+                                     # This ensures you never push a broken image to DockerHub
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Sets up Docker Buildx — an extended build engine that supports
+      # multi-platform builds and better caching than plain docker build
+      - name: Install Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Log in to DockerHub using secrets stored in your GitHub repo
+      # Never hardcode passwords — always use secrets!
+      # Add these at: repo > Settings > Secrets and variables > Actions
+      - name: Login to Docker
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # Build the Docker image from your Dockerfile and push it to DockerHub
+      # Two tags are pushed:
+      #   1. :run_id  — unique tag for this exact build (e.g. :12345678)
+      #                 lets you roll back to any previous version
+      #   2. :latest  — always points to the most recent successful build
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: src/notification-service          # The folder sent to Docker as build context
+          file: src/notification-service/Dockerfile  # Path to your Dockerfile
+          push: true                                 # Actually push to DockerHub (not just build locally)
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/notification-service:${{ github.run_id }}
+            ${{ secrets.DOCKER_USERNAME }}/notification-service:latest
+
+  # ─── JOB 4: UPDATE KUBERNETES MANIFEST ────────────────────────────────────
+  update-k8s:
+    runs-on: ubuntu-latest
+    needs: docker    # Only runs after the docker job succeeds
+                      # No point updating k8s if the image wasn't pushed
+
+    steps:
+      # Check out your SEPARATE Kubernetes manifests repository
+      # (not the app repo — your k8s configs live in a different repo)
+      # "repository" points to that repo, "token" authenticates with a
+      # Personal Access Token (PAT) stored as a secret
+      - name: Checkout manifests repo
+        uses: actions/checkout@v4
+        with:
+          repository: Edwin-Oghenetejiri1/retrogame-k8s-manifests   # Your k8s manifests repo
+          token: ${{ secrets.GH_PAT }}                               # PAT with repo write access
+          ref: main                                                   # Check out the main branch
+
+      # sed is a Linux text-editing tool
+      # This finds the line containing "image: ...notification-service..."
+      # and replaces it with the new image tag from this build
+      # This is how GitOps works — the manifest always reflects what's deployed
+      - name: Update tag in Kubernetes deployment manifest
+        run: |
+          sed -i "s|image: .*notification-service.*|image: ${{ env.DOCKERHUB_ID }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}|" notification-service/deploy.yaml
+
+      # Instead of pushing directly to main (risky!), this Action creates a Pull Request
+      # A human can then review and approve the image tag update before it goes live
+      # "branch" is the name of the new branch it creates for the PR
+      # "delete-branch" cleans up that branch automatically after the PR is merged
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_PAT }}
+          branch: release/${{ env.APP_NAME }}-update-${{ env.IMAGE_TAG }}
+          commit-message: "Update ${{ env.APP_NAME }} image to ${{ env.DOCKERHUB_ID }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}"
+          title: "Update ${{ env.APP_NAME }} image to ${{ env.DOCKERHUB_ID }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}"
+          body: |
+            This pull request updates the ${{ env.APP_NAME }} image tag.
+          base: main           # The PR targets the main branch
+          delete-branch: true  # Auto-delete the release branch after merge
+          labels: |
+            automated          # Tags the PR with an "automated" label so you can filter them
