@@ -30,11 +30,11 @@ jobs:
     steps:
       # Download your repo's code onto the VM
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Install Python on the VM
       - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -67,10 +67,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -151,7 +151,7 @@ jobs:
       # GH_PAT is a GitHub Personal Access Token with "repo" write scope
       # Add it at: repo > Settings > Secrets and variables > Actions
       - name: Checkout manifests repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: Edwin-Oghenetejiri1/retrogame-k8s-manifests
           token: ${{ secrets.GH_PAT }}
