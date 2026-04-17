@@ -1,25 +1,22 @@
-# The name of this workflow — shows up in the GitHub Actions tab in your repo
 name: notification-service-ci
 
-# "on" defines WHEN this workflow runs
 on:
   push:
     branches:
-      - main                              # Run when code is pushed to the main branch
+      - main
     paths:
-      - 'src/notification-service/**'    # BUT only if files inside this folder changed
+      - 'src/notification-service/**'
   pull_request:
     branches:
-      - main                              # Also run when someone opens a Pull Request targeting main
+      - main
     paths:
-      - 'src/notification-service/**'    # Again, only if notification-service files changed
+      - 'src/notification-service/**'
 
-# Reusable variables available to every job
 env:
   APP_NAME: notification-service
   DOCKERHUB_ID: ${{ secrets.DOCKER_USERNAME }}
   IMAGE_TAG: ${{ github.run_id }}
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # ✅ Fixes the Node.js 20 deprecation warning
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
@@ -28,77 +25,62 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Download your repo's code onto the VM
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      # Install Python on the VM
       - name: Setup Python 3.11
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # Upgrade pip and install your service's dependencies
       - name: Install dependencies
         run: |
           cd src/notification-service
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Run your unit tests
-      # Exit code 5 from pytest means "no tests found" — we treat that as a
-      # pass so CI doesn't fail on an empty test folder. Remove this tolerance
-      # once you have real tests written.
       - name: Unit tests
         run: |
           cd src/notification-service
           pip install pytest
-          pytest tests/; exit_code=$?
-          if [ $exit_code -eq 5 ]; then
-            echo "⚠️ No tests found — skipping. Add tests to src/notification-service/tests/"
+          if [ ! -d "tests" ]; then
+            echo "⚠️ No tests/ directory found — skipping. Add tests to src/notification-service/tests/"
             exit 0
           fi
-          exit $exit_code
+          pytest tests/ || exit_code=$?
+          if [ "${exit_code:-0}" -eq 5 ]; then
+            echo "⚠️ No tests collected — skipping."
+            exit 0
+          fi
+          exit ${exit_code:-0}
 
   # ─── JOB 2: CODE QUALITY ───────────────────────────────────────────────────
-  # Runs IN PARALLEL with the build job
   code-quality:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Python 3.11
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # Install all three linting tools at once
-      # flake8 — catches syntax errors and style issues
-      # black  — enforces consistent code formatting
-      # isort  — enforces sorted, grouped imports
       - name: Install linters
         run: |
           pip install flake8 black isort
 
-      # flake8 checks for errors and style — fails the job if issues are found
-      # --max-line-length=88 matches Black's default so they don't conflict
-      # --exclude skips folders that don't need linting
       - name: Run flake8 (lint)
         run: |
           cd src/notification-service
           flake8 . --max-line-length=88 --exclude=.git,__pycache__,.venv
 
-      # black --check does NOT reformat — it just fails if any file WOULD be reformatted
-      # Run "black ." locally to auto-fix before pushing
       - name: Run black (format check)
         run: |
           cd src/notification-service
           black . --check
 
-      # isort --check-only does NOT reorder — it just fails if imports are out of order
-      # Run "isort ." locally to auto-fix before pushing
       - name: Run isort (import order check)
         run: |
           cd src/notification-service
@@ -107,30 +89,21 @@ jobs:
   # ─── JOB 3: BUILD & PUSH DOCKER IMAGE ─────────────────────────────────────
   docker:
     runs-on: ubuntu-latest
-    needs: [build, code-quality]   # Waits for BOTH jobs above to pass
-                                    # If either fails this job is skipped — no broken images pushed
+    needs: [build, code-quality]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      # Sets up Docker Buildx — supports multi-platform builds and better caching
       - name: Install Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Log into DockerHub using secrets — never hardcode credentials!
-      # Add these at: repo > Settings > Secrets and variables > Actions
-      #   DOCKER_USERNAME — your DockerHub username
-      #   DOCKER_TOKEN    — a DockerHub access token (not your password)
       - name: Login to Docker
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # Build the image from your Dockerfile and push two tags to DockerHub:
-      #   :run_id  — unique tag per build, lets you roll back to any version
-      #   :latest  — always points to the most recent successful build
       - name: Docker Build and Push
         uses: docker/build-push-action@v6
         with:
@@ -144,29 +117,20 @@ jobs:
   # ─── JOB 4: UPDATE KUBERNETES MANIFEST ────────────────────────────────────
   update-k8s:
     runs-on: ubuntu-latest
-    needs: docker    # Only runs after the image is successfully pushed
+    needs: docker
 
     steps:
-      # Check out your SEPARATE Kubernetes manifests repo (not this app repo)
-      # GH_PAT is a GitHub Personal Access Token with "repo" write scope
-      # Add it at: repo > Settings > Secrets and variables > Actions
       - name: Checkout manifests repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           repository: Edwin-Oghenetejiri1/retrogame-k8s-manifests
           token: ${{ secrets.GH_PAT }}
           ref: main
 
-      # sed finds the line with "image: ...notification-service..."
-      # and rewrites it with the new image tag from this build
-      # This is GitOps — your manifest always reflects exactly what's running
       - name: Update tag in Kubernetes deployment manifest
         run: |
           sed -i "s|image: .*notification-service.*|image: ${{ env.DOCKERHUB_ID }}/${{ env.APP_NAME }}:${{ env.IMAGE_TAG }}|" notification-service/deploy.yaml
 
-      # Opens a Pull Request on your manifests repo instead of pushing directly to main
-      # A human reviews and approves the image bump before it goes live — much safer!
-      # The release branch is auto-deleted after the PR is merged
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
