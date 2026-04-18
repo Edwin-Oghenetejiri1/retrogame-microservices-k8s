@@ -101,3 +101,9 @@ app.post('/product/delete', async (req, res) => {
 app.listen(3000, () => {
     console.log('Frontend running on port 3000');
 });
+
+
+
+
+
+
