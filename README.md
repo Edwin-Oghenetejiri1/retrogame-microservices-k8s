@@ -12,6 +12,7 @@ RetroGame Shop is a full-stack e-commerce platform for retro gaming products bui
 │                   Frontend (Node.js)             │
 │                   Port: 3000                     │
 └──────────┬──────────────────────────────────────┘
+
 │ calls internally via HTTP
 ┌──────┴───────────────────────────┐
 │                                  │
