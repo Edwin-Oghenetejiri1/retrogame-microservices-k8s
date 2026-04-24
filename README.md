@@ -5,25 +5,27 @@
 RetroGame Shop is a full-stack e-commerce platform for retro gaming products built as a microservices architecture. This repository demonstrates real-world DevOps practices including containerization, CI/CD pipelines, and cloud-native deployment.
 
 ## 🏗️ Architecture
+```text
 ┌─────────────────────────────────────────────────┐
 │                   Frontend (Node.js)             │
 │                   Port: 3000                     │
 └──────────┬──────────────────────────────────────┘
-
-│ calls internally via HTTP
-┌──────┴───────────────────────────┐
-│                                  │
-▼                                  ▼
-Product Service (Go)          Cart Service (Python)
-Port: 8080                    Port: 8081
-│                                  │
-▼                                  ▼
-Order Service (Java)          Payment Service (C#)
-Port: 8082                    Port: 8083
+           │
+           │ calls internally via HTTP
+┌──────────┴───────────────────────────┐
+│                                     │
+▼                                     ▼
+Product Service (Go)            Cart Service (Python)
+Port: 8080                      Port: 8081
+│                                     │
+▼                                     ▼
+Order Service (Java)            Payment Service (C#)
+Port: 8082                      Port: 8083
 │
 ▼
 Notification Service (Python)
 Port: 8084
+```
 
 ## 🛠️ Tech Stack
 
