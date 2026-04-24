@@ -1,13 +1,10 @@
 # 🕹️ RetroGame Microservices
-
 > End-to-end DevOps project | Microservices in 5 languages | Containerized with Docker | Orchestrated with Kubernetes | CI/CD with GitHub Actions | GitOps with ArgoCD
 
 ## 📋 Overview
-
 RetroGame Shop is a full-stack e-commerce platform for retro gaming products built as a microservices architecture. This repository demonstrates real-world DevOps practices including containerization, CI/CD pipelines, and cloud-native deployment.
 
 ## 🏗️ Architecture
-
 ┌─────────────────────────────────────────────────┐
 │                   Frontend (Node.js)             │
 │                   Port: 3000                     │
@@ -125,28 +122,29 @@ All images are available on DockerHub:
 | Notification Service | `oghenetejiri798/notification-service:latest` |
 
 ## 📁 Repository Structure
+```text
 retrogame-microservices-k8s/
 ├── src/
-│   ├── frontend/              # Node.js + Express + EJS
+│   ├── frontend/               # Node.js + Express + EJS
 │   │   ├── app.js
 │   │   ├── views/
 │   │   ├── Dockerfile
 │   │   └── package.json
-│   ├── product-service/       # Go
+│   ├── product-service/        # Go
 │   │   ├── main.go
 │   │   └── Dockerfile
-│   ├── cart-service/          # Python + Flask
+│   ├── cart-service/           # Python + Flask
 │   │   ├── main.py
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
-│   ├── order-service/         # Java + Spring Boot
+│   ├── order-service/          # Java + Spring Boot
 │   │   ├── src/
 │   │   ├── pom.xml
 │   │   └── Dockerfile
-│   ├── payment-service/       # C# + ASP.NET Core
+│   ├── payment-service/        # C# + ASP.NET Core
 │   │   ├── Program.cs
 │   │   └── Dockerfile
-│   └── notification-service/  # Python + Flask
+│   └── notification-service/   # Python + Flask
 │       ├── main.py
 │       ├── requirements.txt
 │       └── Dockerfile
@@ -159,7 +157,7 @@ retrogame-microservices-k8s/
 │       ├── payment-service-ci.yaml
 │       └── notification-service-ci.yaml
 └── docker-compose.yaml
-
+```
 ## 🔗 Related Repositories
 
 - [RetroGame K8s Manifests](https://github.com/Edwin-Oghenetejiri1/retrogame-k8s-manifests) — Kubernetes deployment manifests
