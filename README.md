@@ -92,7 +92,7 @@ Port: 8084
 ---
 
 ## 🔄 CI/CD Pipeline
-
+```
 Each service has its own independent GitHub Actions workflow:
 
 Code pushed to main
@@ -121,7 +121,7 @@ Update K8s Manifests
 ↓
 ArgoCD Auto Sync
 └── Deploys new version to EKS on PR merge
-
+```
 ### Workflows per Service
 
 | Service | Workflow | Test Tool | Lint Tool |
