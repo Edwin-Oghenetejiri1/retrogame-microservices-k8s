@@ -276,47 +276,42 @@ All images are available on DockerHub with two tags:
 ---
 
 ## 📁 Repository Structure
-
-graph LR
-    subgraph Client ["🌐 External"]
-        User((End User))
-    end
-
-    subgraph App ["📦 Microservices (src/)"]
-        FE[Frontend<br/>Node.js / Express]
-        
-        subgraph Logic ["Business Logic"]
-            PS[Product Service<br/>Go]
-            CS[Cart Service<br/>Python / Flask]
-            OS[Order Service<br/>Java / Spring Boot]
-            PAY[Payment Service<br/>C# / .NET]
-            NS[Notification Service<br/>Python / Flask]
-        end
-    end
-
-    subgraph Ops ["⚙️ Infrastructure & CI/CD"]
-        DC[Docker Compose]
-        GH[GitHub Actions<br/>Workflows]
-    end
-
-    %% Connections
-    User --> FE
-    FE --> PS
-    FE --> CS
-    CS --> OS
-    OS --> PAY
-    OS --> NS
-
-    %% CI/CD Relations
-    App -.-> GH
-    App -.-> DC
-
-    %% Styling
-    style FE fill:#f9f,stroke:#333,stroke-width:2px
-    style Logic fill:#f5f5f5,stroke:#666,stroke-dasharray: 5 5
-
-
----
+```
+retrogame-microservices-k8s/
+├── src/
+│   ├── frontend/                  # Node.js + Express + EJS
+│   │   ├── app.js
+│   │   ├── views/
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   ├── product-service/           # Go
+│   │   ├── main.go
+│   │   └── Dockerfile
+│   ├── cart-service/              # Python + Flask
+│   │   ├── main.py
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   ├── order-service/             # Java + Spring Boot
+│   │   ├── src/
+│   │   ├── pom.xml
+│   │   └── Dockerfile
+│   ├── payment-service/           # C# + ASP.NET Core
+│   │   ├── Program.cs
+│   │   └── Dockerfile
+│   └── notification-service/      # Python + Flask
+│       ├── main.py
+│       ├── requirements.txt
+│       └── Dockerfile
+├── .github/
+│   └── workflows/
+│       ├── frontend-ci.yaml
+│       ├── product-service-ci.yaml
+│       ├── cart-service-ci.yaml
+│       ├── order-service-ci.yaml
+│       ├── payment-service-ci.yaml
+│       └── notification-service-ci.yaml
+└── docker-compose.yaml
+```
 
 ## 🔗 Related Repositories
 
