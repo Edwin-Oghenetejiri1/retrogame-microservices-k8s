@@ -55,6 +55,7 @@ You can rewrite or upgrade individual services without touching the rest of the 
 ---
 
 ## 🏗️ Architecture
+```
 ┌─────────────────────────────────┐
 │      Frontend (Node.js)         │
 │         Port: 3000              │
@@ -73,6 +74,7 @@ Port: 8082              Port: 8083
 ▼
 Notification Service (Python)
 Port: 8084
+```
 
 ---
 
