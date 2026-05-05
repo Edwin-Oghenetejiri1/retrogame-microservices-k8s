@@ -135,6 +135,26 @@ ArgoCD Auto Sync
 
 ---
 
+## 📸 CI/CD Pipeline Screenshots
+
+### Frontend CI Pipeline
+![Frontend CI](screenshots/frontend-ci.png)
+
+### Product Service CI Pipeline
+![Product Service CI](screenshots/product-service-ci.png)
+
+### Cart Service CI Pipeline
+![Cart Service CI](screenshots/cart-service-ci.png)
+
+### Order Service CI Pipeline
+![Order Service CI](screenshots/order-service-ci.png)
+
+### Payment Service CI Pipeline
+![Payment Service CI](screenshots/payment-service-ci.png)
+
+### Notification Service CI Pipeline
+![Notification Service CI](screenshots/notification-service-ci.png)
+
 ## 🔒 Security Scanning with Trivy
 
 Every Docker image is scanned for vulnerabilities before pushing to DockerHub:
